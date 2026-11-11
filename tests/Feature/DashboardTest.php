@@ -2,19 +2,37 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
 {
-    /**
-     * A basic feature test example.
-     */
-    public function test_example(): void
-    {
-        $response = $this->get('/');
+    use RefreshDatabase;
 
-        $response->assertStatus(200);
+    public function test_guests_are_redirected_to_the_login_page(): void
+    {
+        $response = $this->get(route('dashboard'));
+
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_authenticated_users_can_visit_the_dashboard(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee($user->name);
+    }
+
+    public function test_appearance_settings_page_is_displayed(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('appearance.edit'));
+
+        $response->assertOk();
     }
 }
