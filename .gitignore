@@ -25,3 +25,15 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+todo.txt
+
+# Laravel Boost / AI agent files (generated locally by `php artisan boost:install`)
+/.agents
+/.ai
+/.claude
+/.junie
+/.mcp.json
+/AGENTS.md
+/CLAUDE.md
+/boost.json
+/opencode.json

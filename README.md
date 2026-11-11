@@ -1,58 +1,138 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Blade Starter Kit
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A minimal Laravel starter kit built with **Blade**, **Tailwind CSS 4** and plain JavaScript (no Livewire, no Inertia, no front-end framework).
+It mirrors the features and screens of the official Laravel Vue starter kit, with code that is easy to read and extend, which makes it a good fit for learning Laravel.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Home page** and a protected **dashboard**
+- **Authentication**: login (with "remember me"), registration, forgotten password / password reset, logout
+- **Settings**
+  - Profile: update name and email address, delete account
+  - Password: change password
+  - Appearance: light, dark or system theme (stored in the browser, applied without flicker)
+- Optional **email verification** (disabled by default, see below)
+- **PHPUnit feature tests** for every feature above
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Two-factor authentication is intentionally not included.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Requirements
 
-## Learning Laravel
+- PHP 8.3 or higher
+- [Composer](https://getcomposer.org)
+- Node.js 20+ and npm
+- The [Laravel installer](https://laravel.com/docs/installation) (optional)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+The default database is SQLite, so no database server is needed.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Installation
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### With the Laravel installer
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+laravel new my-app --using=jeromeborg/blade-starter-kit
+cd my-app
+npm install && npm run build
+composer run dev
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### With Composer
 
-## Contributing
+```bash
+composer create-project jeromeborg/blade-starter-kit my-app
+cd my-app
+npm install && npm run build
+composer run dev
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+`create-project` copies `.env.example` to `.env`, generates the application key, creates `database/database.sqlite` and runs the migrations.
 
-## Code of Conduct
+### From a clone of this repository
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+git clone <repository-url> my-app
+cd my-app
+composer run setup
+composer run dev
+```
 
-## Security Vulnerabilities
+The application is then available at [http://localhost:8000](http://localhost:8000).
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Testing the starter kit locally (before publishing)
+
+To check what a new project created from the kit looks like, without publishing it on Packagist:
+
+```bash
+# 1. Export a clean copy of the kit (only files tracked or not ignored by git)
+git ls-files -co --exclude-standard | rsync -a --files-from=- . ../blade-starter-kit-export/
+
+# 2. Create a new application from that copy
+cd ..
+composer create-project jeromeborg/blade-starter-kit my-test-app --stability=dev \
+  --repository='{"type":"path","url":"../blade-starter-kit-export","options":{"symlink":false}}'
+
+# 3. Build the assets, run the tests and start the application
+cd my-test-app
+npm install && npm run build
+php artisan test
+composer run dev
+```
+
+## Running the tests
+
+```bash
+php artisan test
+```
+
+Run a single file or test:
+
+```bash
+php artisan test tests/Feature/Auth/AuthenticationTest.php
+php artisan test --filter=test_users_can_logout
+```
+
+## Emails (password reset)
+
+The `.env.example` file uses the `log` mailer: emails are not sent but written to `storage/logs/laravel.log`.
+To try the "Forgot your password?" flow, request a reset link, then open the log file and copy the link.
+
+Configure the `MAIL_*` variables in `.env` to send real emails (or use a local tool such as Mailpit).
+
+## Enabling email verification
+
+Email verification is disabled by default. To enable it, edit `app/Models/User.php`:
+
+```php
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+class User extends Authenticatable implements MustVerifyEmail
+```
+
+New users then receive a verification email, and the dashboard (protected by the `verified` middleware) is only reachable once the address is verified.
+The related tests in `tests/Feature/Auth/EmailVerificationTest.php` are skipped while the feature is disabled and run automatically once it is enabled.
+
+## Project structure
+
+| Path | Content |
+|---|---|
+| `routes/web.php` | Home and dashboard routes |
+| `routes/auth.php` | Authentication routes |
+| `routes/settings.php` | Settings routes (profile, password, appearance) |
+| `app/Http/Controllers/Auth` | Authentication controllers |
+| `app/Http/Controllers/Settings` | Profile and password controllers |
+| `app/Http/Requests` | Form requests (login, profile update) |
+| `resources/views/auth` | Login, register, password reset… pages |
+| `resources/views/settings` | Settings pages |
+| `resources/views/components` | Reusable Blade components (`x-button`, `x-input`, layouts…) |
+| `resources/js/app.js` | Dark mode, dropdowns, mobile menu and dialogs |
+| `tests/Feature` | PHPUnit feature tests |
+
+## Code style
+
+```bash
+vendor/bin/pint
+```
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This starter kit is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
